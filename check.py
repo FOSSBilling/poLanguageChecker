@@ -136,9 +136,8 @@ class poChecker:
 
 
 def main():
-    # Create argument parser
     parser = argparse.ArgumentParser(description="Process a .po file path")
-    parser.add_argument("--path", type=str, help="Path to the .po file")
+    parser.add_argument("--path", type=str, help="Path to the .po file", required=True)
     parser.add_argument(
         "--language",
         type=str,
@@ -184,3 +183,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
