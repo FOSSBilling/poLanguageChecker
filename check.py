@@ -41,7 +41,7 @@ class poChecker:
             config={
                 "cacheSize": 1000,
                 "pipelineCaching": True,
-                "maxSpellingSuggestions": 1,
+                "maxSpellingSuggestions": 10,
                 "disabledRuleIds": ",".join(disabledRules),
             },
         )
@@ -68,12 +68,12 @@ class poChecker:
 
         self.tool.close()
 
-    def suggestCorrectionsFromCustomDic(self, typo):
-        min_dist = 4
+    def suggestCorrectionsFromCustomDic(self, typo, distance_limit=3):
+        min_dist = distance_limit + 1
         suggested_word = None
 
         for knownWord in self.dict:
-            dist = distance(typo, knownWord, score_cutoff=3)
+            dist = distance(typo, knownWord, score_cutoff=distance_limit)
             if dist < min_dist:
                 min_dist = dist
                 suggested_word = knownWord
@@ -94,6 +94,7 @@ class poChecker:
         offset = " " * issue.offsetInContext
         pointer = "^" * issue.errorLength
         context = issue.context.strip()
+        suggestion = None
 
         print(Fore.RED + f"{issue.message.strip()}")
         print(Fore.YELLOW + f"{context}")
@@ -102,10 +103,17 @@ class poChecker:
         typo = context[
             issue.offsetInContext : issue.offsetInContext + issue.errorLength
         ]
-        suggestionFromCustomDict = self.suggestCorrectionsFromCustomDic(typo)
 
-        if issue.replacements and issue.replacements[0]:
-            # Ensure we are providing the suggestion with the smallest edit distance.
+        hasSuggestion = True if issue.replacements and issue.replacements[0] else False
+
+        # Our method for giving suggestions is less robust, we should reduce the allowed edit distance if a suggestion was already provided
+        if hasSuggestion:
+            suggestionFromCustomDict = self.suggestCorrectionsFromCustomDic(typo, 2)
+        else:
+            suggestionFromCustomDict = self.suggestCorrectionsFromCustomDic(typo, 3)
+
+        if hasSuggestion:
+            # Ensure we are providing the suggestion with the smallest edit distance
             if suggestionFromCustomDict:
                 suggestion = (
                     issue.replacements[0]

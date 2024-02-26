@@ -1,6 +1,6 @@
 {
   "checkSourceString": true,
   "checkTranslationString": false,
-  "customDictionary": ["FOSSBilling", "WHOIS", "cron", "Cron"],
+  "customDictionary": ["FOSSBilling", "WHOIS", "cron", "Cron", "intl", "Symfony", "DirectAdmin", "IPs"],
   "disabledRules": []
 }
