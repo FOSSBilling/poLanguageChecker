@@ -2,6 +2,26 @@ import argparse
 import polib
 import language_tool_python
 from colorama import Fore, Style
+import os
+import json
+from jsonschema import validate
+import jsonschema_default
+
+schema = {
+    "type": "object",
+    "properties": {
+        "enableCorrections": {"type": "boolean", "default": False},
+        "checkSourceString": {"type": "boolean", "default": True},
+        "checkTranslationString": {"type": "boolean", "default": False},
+        "customDictionary": {
+            "type": "array",
+            "items": {"type": "string"},
+            "default": [],
+        },
+        "disabledRules": {"type": "array", "items": {"type": "string"}, "default": []},
+    },
+    "required": [],
+}
 
 
 class poChecker:
@@ -12,14 +32,23 @@ class poChecker:
         correct=False,
         check_source=True,
         check_translation=False,
-        ignore="",
+        dict=[],
+        disabledRules=[],
     ):
         self.pofile = polib.pofile(path)
-        self.tool = language_tool_python.LanguageTool(language)
-        self.corret = correct
+        self.tool = language_tool_python.LanguageTool(
+            language,
+            config={
+                "cacheSize": 1000,
+                "pipelineCaching": True,
+                "maxSpellingSuggestions": 1,
+                "disabledRuleIds": ",".join(disabledRules),
+            },
+        )
+        self.correct = correct
         self.check_source = check_source
         self.check_translation = check_translation
-        self.ignore = list(ignore.split(","))
+        self.dict = dict
 
     def process(self):
         for entry in self.pofile:
@@ -42,7 +71,7 @@ class poChecker:
             issue.offsetInContext : issue.offsetInContext + issue.errorLength
         ]
 
-        if context in self.ignore:
+        if context in self.dict:
             return False
         else:
             return True
@@ -71,40 +100,32 @@ def main():
         help="The language of the input file (Examples: en-US, en, es, ca-ES)",
     )
     parser.add_argument(
-        "--correct",
-        action="store_true",
-        help="If automated corrections should be enabled or disabled",
-    )
-    parser.add_argument(
-        "--check-source",
-        action="store_false",
-        help="If translation sources (msid) should be checked",
-    )
-    parser.add_argument(
-        "--check-translation",
-        action="store_true",
-        help="If the translation (msgstr) should be checked",
-    )
-    parser.add_argument(
-        "--ignore",
-        default="",
-        help="A comma seperated list of ignore words",
-    )
-    parser.add_argument(
-        "--verbose",
-        action="store_true",
-        help="Output ",
+        "--config",
+        type=str,
+        default="potLanguageChecker.json",
+        help="The PotLangueChecker config file to read.",
     )
 
     args = parser.parse_args()
 
+    if not os.path.exists(args.config):
+        print(Fore.RED + f"Config file {args.config} does not exist")
+        exit(1)
+
+    with open(args.config, "r") as f:
+        config = json.load(f)
+
+    validate(instance=config, schema=schema)
+    default_config = jsonschema_default.create_from(schema)
+    config = {**default_config, **config}
+
     checker = poChecker(
         args.path,
         language=args.language,
-        correct=args.correct,
-        check_source=args.check_source,
-        check_translation=args.check_translation,
-        ignore=args.ignore,
+        correct=config["enableCorrections"],
+        check_source=config["checkSourceString"],
+        check_translation=config["checkTranslationString"],
+        dict=config["customDictionary"],
     )
 
     checker.process()
