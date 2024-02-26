@@ -34,6 +34,7 @@ class poChecker:
         check_translation=False,
         dict=[],
         disabledRules=[],
+        verbose=False,
     ):
         self.pofile = polib.pofile(path)
         self.tool = language_tool_python.LanguageTool(
@@ -49,6 +50,7 @@ class poChecker:
         self.check_source = check_source
         self.check_translation = check_translation
         self.dict = dict
+        self.verbose = verbose
 
     def process(self):
         for entry in self.pofile:
@@ -65,6 +67,8 @@ class poChecker:
                     for issue in issues:
                         if self.isIssueValid(issue):
                             self.outputIssue(issue)
+
+        self.tool.close()
 
     def isIssueValid(self, issue):
         context = issue.context[
@@ -86,6 +90,9 @@ class poChecker:
         if issue.replacements and issue.replacements[0]:
             print(Fore.GREEN + f"{offset}{issue.replacements[0]}")
 
+        if self.verbose:
+            print(Fore.WHITE + f"Triggered rule ID: {issue.ruleId}")
+
         print(Style.RESET_ALL)
 
 
@@ -104,6 +111,11 @@ def main():
         type=str,
         default="potLanguageChecker.json",
         help="The PotLangueChecker config file to read.",
+    )
+    parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="Displays additional info such as what rule ID was striggered",
     )
 
     args = parser.parse_args()
@@ -126,6 +138,7 @@ def main():
         check_source=config["checkSourceString"],
         check_translation=config["checkTranslationString"],
         dict=config["customDictionary"],
+        verbose=args.verbose,
     )
 
     checker.process()
