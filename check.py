@@ -6,11 +6,11 @@ import os
 import json
 from jsonschema import validate
 import jsonschema_default
+from Levenshtein import distance
 
 schema = {
     "type": "object",
     "properties": {
-        "enableCorrections": {"type": "boolean", "default": False},
         "checkSourceString": {"type": "boolean", "default": True},
         "checkTranslationString": {"type": "boolean", "default": False},
         "customDictionary": {
@@ -29,7 +29,6 @@ class poChecker:
         self,
         path,
         language="en-US",
-        correct=False,
         check_source=True,
         check_translation=False,
         dict=[],
@@ -46,7 +45,6 @@ class poChecker:
                 "disabledRuleIds": ",".join(disabledRules),
             },
         )
-        self.correct = correct
         self.check_source = check_source
         self.check_translation = check_translation
         self.dict = dict
@@ -70,6 +68,18 @@ class poChecker:
 
         self.tool.close()
 
+    def suggestCorrectionsFromCustomDic(self, typo):
+        min_dist = 4
+        suggested_word = None
+
+        for knownWord in self.dict:
+            dist = distance(typo, knownWord, score_cutoff=3)
+            if dist < min_dist:
+                min_dist = dist
+                suggested_word = knownWord
+
+        return suggested_word
+
     def isIssueValid(self, issue):
         context = issue.context[
             issue.offsetInContext : issue.offsetInContext + issue.errorLength
@@ -83,12 +93,33 @@ class poChecker:
     def outputIssue(self, issue):
         offset = " " * issue.offsetInContext
         pointer = "^" * issue.errorLength
+        context = issue.context.strip()
+
         print(Fore.RED + f"{issue.message.strip()}")
-        print(Fore.YELLOW + f"{issue.context.strip()}")
+        print(Fore.YELLOW + f"{context}")
         print(f"{offset}{pointer}")
 
+        typo = context[
+            issue.offsetInContext : issue.offsetInContext + issue.errorLength
+        ]
+        suggestionFromCustomDict = self.suggestCorrectionsFromCustomDic(typo)
+
         if issue.replacements and issue.replacements[0]:
-            print(Fore.GREEN + f"{offset}{issue.replacements[0]}")
+            # Ensure we are providing the suggestion with the smallest edit distance.
+            if suggestionFromCustomDict:
+                suggestion = (
+                    issue.replacements[0]
+                    if distance(typo, issue.replacements[0], score_cutoff=3)
+                    < distance(typo, suggestionFromCustomDict, score_cutoff=3)
+                    else suggestionFromCustomDict
+                )
+            else:
+                suggestion = issue.replacements[0]
+        else:
+            suggestion = suggestionFromCustomDict
+
+        if suggestion:
+            print(Fore.GREEN + f"{offset}{suggestion}")
 
         if self.verbose:
             print(Fore.WHITE + f"Triggered rule ID: {issue.ruleId}")
@@ -134,7 +165,6 @@ def main():
     checker = poChecker(
         args.path,
         language=args.language,
-        correct=config["enableCorrections"],
         check_source=config["checkSourceString"],
         check_translation=config["checkTranslationString"],
         dict=config["customDictionary"],
