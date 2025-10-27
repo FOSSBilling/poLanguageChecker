@@ -20,4 +20,4 @@ LTP_JAR_DIR_PATH="/home/user/LanguageTool-6.6" python check.py --path /home/user
 
 ## Screenshot
 
-![Screenshot](https://raw.githubusercontent.com/FOSSBilling/potLanguageChecker/main/screenshot.png)
+![Screenshot](https://raw.githubusercontent.com/FOSSBilling/poLanguageChecker/main/screenshot.png)

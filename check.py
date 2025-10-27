@@ -8,7 +8,7 @@ import json
 from jsonschema import validate
 import jsonschema_default
 from Levenshtein import distance
-
+import sys
 
 # Schema for the JSON configs
 schema = {
@@ -28,6 +28,8 @@ schema = {
 
 # poChecker class - does all the main work
 class poChecker:
+    totalIssues = 0
+
     def __init__(
         self,
         path,
@@ -63,6 +65,8 @@ class poChecker:
                 self.doCheck(entry.msgid)
 
         self.tool.close()
+        
+        return self.totalIssues
         
     # Checks a string against the custom dict and LanguageTool
     def doCheck(self, string):
@@ -116,6 +120,7 @@ class poChecker:
         pointer = "^" * issue.errorLength
         context = issue.context.strip()
         suggestion = None
+        self.totalIssues+=1
 
         print(Fore.RED + f"{issue.message.strip()}")
         print(Fore.YELLOW + f"{context}")
@@ -170,8 +175,8 @@ def main():
     parser.add_argument(
         "--config",
         type=str,
-        default="potLanguageChecker.json",
-        help="The PotLangueChecker config file to read.",
+        default="poLanguageChecker.json",
+        help="The poLanguageChecker config file to read.",
     )
     parser.add_argument(
         "--verbose",
@@ -197,13 +202,17 @@ def main():
         language=args.language,
         check_source=config["checkSourceString"],
         check_translation=config["checkTranslationString"],
-        checkGrammar=config["checkGrammar"],
         dict=config["customDictionary"],
         verbose=args.verbose,
     )
 
-    checker.process()
-
+    result = checker.process()
+    print(f"Total number of issues: {result}")
+    
+    if result > 0:
+        sys.exit(1)
+    else:
+        sys.exit(0)
 
 if __name__ == "__main__":
     main()
