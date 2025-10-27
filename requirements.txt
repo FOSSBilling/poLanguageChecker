@@ -1,5 +1,6 @@
 polib==1.2.0
-language-tool-python==2.7.1
-jsonschema==4.21.1
-jsonschema-default==1.6.0
-levenshtein==0.25.0
+language-tool-python==2.9.4
+jsonschema==4.25.1
+jsonschema-default==1.8.1
+levenshtein==0.27.1
+colorama==0.4.6

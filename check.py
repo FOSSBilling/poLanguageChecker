@@ -1,6 +1,7 @@
 import argparse
 import polib
-import language_tool_python
+from language_tool_python import LanguageTool, utils
+from language_tool_python.utils import classify_matches
 from colorama import Fore, Style
 import os
 import json
@@ -8,6 +9,8 @@ from jsonschema import validate
 import jsonschema_default
 from Levenshtein import distance
 
+
+# Schema for the JSON configs
 schema = {
     "type": "object",
     "properties": {
@@ -23,7 +26,7 @@ schema = {
     "required": [],
 }
 
-
+# poChecker class - does all the main work
 class poChecker:
     def __init__(
         self,
@@ -32,17 +35,17 @@ class poChecker:
         check_source=True,
         check_translation=False,
         dict=[],
-        disabledRules=[],
+        disabled_rules=[],
         verbose=False,
     ):
-        self.pofile = polib.pofile(path)
-        self.tool = language_tool_python.LanguageTool(
+        self.poFile = polib.pofile(path)
+        self.tool = LanguageTool(
             language,
             config={
-                "cacheSize": 1000,
+                "cacheSize": 500,
                 "pipelineCaching": True,
                 "maxSpellingSuggestions": 10,
-                "disabledRuleIds": ",".join(disabledRules),
+                "disabledRuleIds": ",".join(disabled_rules),
             },
         )
         self.check_source = check_source
@@ -50,24 +53,40 @@ class poChecker:
         self.dict = dict
         self.verbose = verbose
 
+    # Main check loop
     def process(self):
-        for entry in self.pofile:
+        for entry in self.poFile:
+            # Source strings
             if self.check_source:
-                issues = self.tool.check(entry.msgid)
-                if len(issues) > 0:
-                    for issue in issues:
-                        if self.isIssueValid(issue):
-                            self.outputIssue(issue)
-
+                self.doCheck(entry.msgid)
             if self.check_translation and entry.msgstr:
-                issues = self.tool.check(entry.msgstr)
-                if len(issues) > 0:
-                    for issue in issues:
-                        if self.isIssueValid(issue):
-                            self.outputIssue(issue)
+                self.doCheck(entry.msgid)
 
         self.tool.close()
+        
+    # Checks a string against the custom dict and LanguageTool
+    def doCheck(self, string):
+        # Get the issues
+        issues = self.tool.check(string)
+        # If there are issues, validate them
+        if len(issues) > 0:
+            for issue in issues:
+                if self.isIssueValid(issue):
+                    self.outputIssue(issue)
 
+        self.tool.close()
+        
+    # Checks a string against the custom dict and LanguageTool
+    def doCheck(self, string):
+        # Get the issues
+        issues = self.tool.check(string)
+        # If there are issues, validate them
+        if len(issues) > 0:
+            for issue in issues:
+                if self.isIssueValid(issue):
+                    self.outputIssue(issue)
+
+    # Suggests a spelling correction using the custom dictionary
     def suggestCorrectionsFromCustomDic(self, typo, distance_limit=3):
         min_dist = distance_limit + 1
         suggested_word = None
@@ -80,6 +99,7 @@ class poChecker:
 
         return suggested_word
 
+    # Checks an issue against the 
     def isIssueValid(self, issue):
         context = issue.context[
             issue.offsetInContext : issue.offsetInContext + issue.errorLength
@@ -90,6 +110,7 @@ class poChecker:
         else:
             return True
 
+    # Formats and outputs the result to the terminal screen
     def outputIssue(self, issue):
         offset = " " * issue.offsetInContext
         pointer = "^" * issue.errorLength
@@ -100,6 +121,7 @@ class poChecker:
         print(Fore.YELLOW + f"{context}")
         print(f"{offset}{pointer}")
 
+        # Extracting the typo out of the string using the offset and length provided
         typo = context[
             issue.offsetInContext : issue.offsetInContext + issue.errorLength
         ]
@@ -135,6 +157,7 @@ class poChecker:
         print(Style.RESET_ALL)
 
 
+# Main func which takes the config, inits, and then runs the checker
 def main():
     parser = argparse.ArgumentParser(description="Process a .po file path")
     parser.add_argument("--path", type=str, help="Path to the .po file", required=True)
@@ -153,7 +176,7 @@ def main():
     parser.add_argument(
         "--verbose",
         action="store_true",
-        help="Displays additional info such as what rule ID was striggered",
+        help="Displays additional info such as what rule ID was triggered",
     )
 
     args = parser.parse_args()
@@ -174,6 +197,7 @@ def main():
         language=args.language,
         check_source=config["checkSourceString"],
         check_translation=config["checkTranslationString"],
+        checkGrammar=config["checkGrammar"],
         dict=config["customDictionary"],
         verbose=args.verbose,
     )
