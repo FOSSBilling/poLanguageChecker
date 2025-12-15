@@ -67,19 +67,7 @@ class poChecker:
         self.tool.close()
         
         return self.totalIssues
-        
-    # Checks a string against the custom dict and LanguageTool
-    def doCheck(self, string):
-        # Get the issues
-        issues = self.tool.check(string)
-        # If there are issues, validate them
-        if len(issues) > 0:
-            for issue in issues:
-                if self.isIssueValid(issue):
-                    self.outputIssue(issue)
 
-        self.tool.close()
-        
     # Checks a string against the custom dict and LanguageTool
     def doCheck(self, string):
         # Get the issues
