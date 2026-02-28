@@ -1,6 +1,6 @@
 import argparse
 import polib
-from language_tool_python import LanguageTool, utils
+from language_tool_python import LanguageTool
 from language_tool_python.utils import classify_matches
 from colorama import Fore, Style
 import os
