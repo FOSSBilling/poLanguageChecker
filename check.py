@@ -26,7 +26,7 @@ schema = {
 }
 
 # poChecker class - does all the main work
-class poChecker:
+class PoChecker:
     totalIssues = 0
 
     def __init__(
@@ -61,7 +61,7 @@ class poChecker:
             if self.check_source:
                 self.doCheck(entry.msgid)
             if self.check_translation and entry.msgstr:
-                self.doCheck(entry.msgid)
+                self.doCheck(entry.msgstr)
 
         self.tool.close()
         
@@ -90,7 +90,7 @@ class poChecker:
 
         return suggested_word
 
-    # Checks an issue against the 
+    # Checks an issue against the custom dictionary to decide if it should be ignored
     def isIssueValid(self, issue):
         context = issue.context[
             issue.offsetInContext : issue.offsetInContext + issue.errorLength
@@ -107,7 +107,7 @@ class poChecker:
         pointer = "^" * issue.errorLength
         context = issue.context.strip()
         suggestion = None
-        self.totalIssues+=1
+        self.totalIssues += 1
 
         print(Fore.RED + f"{issue.message.strip()}")
         print(Fore.YELLOW + f"{context}")
@@ -184,12 +184,13 @@ def main():
     default_config = jsonschema_default.create_from(schema)
     config = {**default_config, **config}
 
-    checker = poChecker(
+    checker = PoChecker(
         args.path,
         language=args.language,
         check_source=config["checkSourceString"],
         check_translation=config["checkTranslationString"],
         dict=config["customDictionary"],
+        disabled_rules=config["disabledRules"],
         verbose=args.verbose,
     )
 
