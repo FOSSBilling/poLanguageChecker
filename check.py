@@ -86,7 +86,7 @@ class PoChecker:
         min_dist = distance_limit + 1
         suggested_word = None
 
-        for knownWord in self.dict:
+        for knownWord in self.custom_dict:
             dist = distance(typo, knownWord, score_cutoff=distance_limit)
             # Levenshtein.distance returns -1 when the true distance exceeds score_cutoff.
             # Ignore such values instead of treating -1 as a better (smaller) distance.
@@ -102,7 +102,7 @@ class PoChecker:
             issue.offsetInContext : issue.offsetInContext + issue.errorLength
         ]
 
-        if context in self.dict:
+        if context in self.custom_dict:
             return False
         else:
             return True
