@@ -195,7 +195,7 @@ def main():
         language=args.language,
         check_source=config["checkSourceString"],
         check_translation=config["checkTranslationString"],
-        dict=config["customDictionary"],
+        custom_dict=config["customDictionary"],
         disabled_rules=config["disabledRules"],
         verbose=args.verbose,
     )
