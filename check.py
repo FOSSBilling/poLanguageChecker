@@ -35,10 +35,14 @@ class PoChecker:
         language="en-US",
         check_source=True,
         check_translation=False,
-        dict=[],
-        disabled_rules=[],
+        custom_dict=None,
+        disabled_rules=None,
         verbose=False,
     ):
+        if custom_dict is None:
+            custom_dict = []
+        if disabled_rules is None:
+            disabled_rules = []
         self.poFile = polib.pofile(path)
         self.tool = LanguageTool(
             language,
@@ -51,7 +55,7 @@ class PoChecker:
         )
         self.check_source = check_source
         self.check_translation = check_translation
-        self.dict = dict
+        self.custom_dict = custom_dict
         self.verbose = verbose
 
     # Main check loop
@@ -84,7 +88,9 @@ class PoChecker:
 
         for knownWord in self.dict:
             dist = distance(typo, knownWord, score_cutoff=distance_limit)
-            if dist < min_dist:
+            # Levenshtein.distance returns -1 when the true distance exceeds score_cutoff.
+            # Ignore such values instead of treating -1 as a better (smaller) distance.
+            if dist != -1 and dist < min_dist:
                 min_dist = dist
                 suggested_word = knownWord
 
@@ -175,7 +181,7 @@ def main():
 
     if not os.path.exists(args.config):
         print(Fore.RED + f"Config file {args.config} does not exist")
-        exit(1)
+        sys.exit(1)
 
     with open(args.config, "r") as f:
         config = json.load(f)
