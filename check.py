@@ -175,7 +175,7 @@ def main():
 
     if not os.path.exists(args.config):
         print(Fore.RED + f"Config file {args.config} does not exist")
-        exit(1)
+        sys.exit(1)
 
     with open(args.config, "r") as f:
         config = json.load(f)
