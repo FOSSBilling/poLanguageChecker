@@ -84,7 +84,9 @@ class PoChecker:
 
         for knownWord in self.dict:
             dist = distance(typo, knownWord, score_cutoff=distance_limit)
-            if dist < min_dist:
+            # Levenshtein.distance returns -1 when the true distance exceeds score_cutoff.
+            # Ignore such values instead of treating -1 as a better (smaller) distance.
+            if dist != -1 and dist < min_dist:
                 min_dist = dist
                 suggested_word = knownWord
 
