@@ -35,10 +35,14 @@ class PoChecker:
         language="en-US",
         check_source=True,
         check_translation=False,
-        dict=[],
-        disabled_rules=[],
+        custom_dict=None,
+        disabled_rules=None,
         verbose=False,
     ):
+        if custom_dict is None:
+            custom_dict = []
+        if disabled_rules is None:
+            disabled_rules = []
         self.poFile = polib.pofile(path)
         self.tool = LanguageTool(
             language,
@@ -51,7 +55,7 @@ class PoChecker:
         )
         self.check_source = check_source
         self.check_translation = check_translation
-        self.dict = dict
+        self.custom_dict = custom_dict
         self.verbose = verbose
 
     # Main check loop
