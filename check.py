@@ -27,7 +27,6 @@ schema = {
 
 # poChecker class - does all the main work
 class PoChecker:
-    totalIssues = 0
 
     def __init__(
         self,
@@ -57,6 +56,7 @@ class PoChecker:
         self.check_translation = check_translation
         self.custom_dict = custom_dict
         self.verbose = verbose
+        self.totalIssues = 0
 
     # Main check loop
     def process(self):
@@ -82,7 +82,7 @@ class PoChecker:
                     self.outputIssue(issue)
 
     # Suggests a spelling correction using the custom dictionary
-    def suggestCorrectionsFromCustomDic(self, typo, distance_limit=3):
+    def suggestCorrectionsFromCustomDict(self, typo, distance_limit=3):
         min_dist = distance_limit + 1
         suggested_word = None
 
@@ -124,13 +124,13 @@ class PoChecker:
             issue.offsetInContext : issue.offsetInContext + issue.errorLength
         ]
 
-        hasSuggestion = True if issue.replacements and issue.replacements[0] else False
+        hasSuggestion = bool(issue.replacements and issue.replacements[0])
 
         # Our method for giving suggestions is less robust, we should reduce the allowed edit distance if a suggestion was already provided
         if hasSuggestion:
-            suggestionFromCustomDict = self.suggestCorrectionsFromCustomDic(typo, 2)
+            suggestionFromCustomDict = self.suggestCorrectionsFromCustomDict(typo, 2)
         else:
-            suggestionFromCustomDict = self.suggestCorrectionsFromCustomDic(typo, 3)
+            suggestionFromCustomDict = self.suggestCorrectionsFromCustomDict(typo, 3)
 
         if hasSuggestion:
             # Ensure we are providing the suggestion with the smallest edit distance
