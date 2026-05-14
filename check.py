@@ -63,16 +63,16 @@ class PoChecker:
         for entry in self.poFile:
             # Source strings
             if self.check_source:
-                self.doCheck(entry.msgid)
+                self.do_check(entry.msgid)
             if self.check_translation and entry.msgstr:
-                self.doCheck(entry.msgstr)
+                self.do_check(entry.msgstr)
 
         self.tool.close()
         
         return self.totalIssues
 
     # Checks a string against the custom dict and LanguageTool
-    def doCheck(self, string):
+    def do_check(self, string):
         # Get the issues
         issues = self.tool.check(string)
         # If there are issues, validate them
