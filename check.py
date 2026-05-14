@@ -42,7 +42,7 @@ class PoChecker:
             custom_dict = []
         if disabled_rules is None:
             disabled_rules = []
-        self.poFile = polib.pofile(path)
+        self.po_file = polib.pofile(path)
         self.tool = LanguageTool(
             language,
             config={
@@ -60,19 +60,19 @@ class PoChecker:
 
     # Main check loop
     def process(self):
-        for entry in self.poFile:
+        for entry in self.po_file:
             # Source strings
             if self.check_source:
-                self.doCheck(entry.msgid)
+                self.do_check(entry.msgid)
             if self.check_translation and entry.msgstr:
-                self.doCheck(entry.msgstr)
+                self.do_check(entry.msgstr)
 
         self.tool.close()
         
         return self.totalIssues
 
     # Checks a string against the custom dict and LanguageTool
-    def doCheck(self, string):
+    def do_check(self, string):
         # Get the issues
         issues = self.tool.check(string)
         # If there are issues, validate them
@@ -82,7 +82,7 @@ class PoChecker:
                     self.outputIssue(issue)
 
     # Suggests a spelling correction using the custom dictionary
-    def suggestCorrectionsFromCustomDict(self, typo, distance_limit=3):
+    def suggest_corrections_from_custom_dict(self, typo, distance_limit=3):
         min_dist = distance_limit + 1
         suggested_word = None
 
