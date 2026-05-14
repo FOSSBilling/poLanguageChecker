@@ -82,7 +82,7 @@ class PoChecker:
                     self.outputIssue(issue)
 
     # Suggests a spelling correction using the custom dictionary
-    def suggestCorrectionsFromCustomDict(self, typo, distance_limit=3):
+    def suggest_corrections_from_custom_dict(self, typo, distance_limit=3):
         min_dist = distance_limit + 1
         suggested_word = None
 
