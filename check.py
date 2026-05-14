@@ -42,7 +42,7 @@ class PoChecker:
             custom_dict = []
         if disabled_rules is None:
             disabled_rules = []
-        self.poFile = polib.pofile(path)
+        self.po_file = polib.pofile(path)
         self.tool = LanguageTool(
             language,
             config={
@@ -60,7 +60,7 @@ class PoChecker:
 
     # Main check loop
     def process(self):
-        for entry in self.poFile:
+        for entry in self.po_file:
             # Source strings
             if self.check_source:
                 self.do_check(entry.msgid)
