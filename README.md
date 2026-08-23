@@ -1,3 +1,5 @@
+> Warning: This repository has been archived and is no longer maintained. For information up-to-date about FOSSBilling check the [FOSSBilling/FOSSBilling](https://github.com/FOSSBilling/FOSSBilling) repository.
+
 # poLanguageChecker
 
 This is a small python script that can be used to validate a if gettext `.pot` / `.po` file contains valid grammar and spelling.
